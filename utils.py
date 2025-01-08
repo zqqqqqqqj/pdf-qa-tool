@@ -4,8 +4,17 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.language_models.base import BaseLanguageModel
-@BaseLanguageModel.validator("verbose", allow_reuse=True)
+from pydantic import BaseModel, validator
+
+class BaseLanguageModel(BaseModel):
+    verbose: bool = False
+
+    @validator('verbose', pre=True, always=True, allow_reuse=True)
+    def set_verbose(cls, v):
+        if not isinstance(v, bool):
+            raise ValueError('verbose must be a boolean')
+        return v
+
 def qa_agent(openai_api_key, memory, uploaded_file, question):
     model = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=openai_api_key)
     file_content = uploaded_file.read()
